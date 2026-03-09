@@ -1,0 +1,90 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/paoloelefante/perf-agent
+  tag: ""  # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+
+# Health/metrics server
+health:
+  port: 8080
+
+# Kubernetes probes
+livenessProbe:
+  httpGet:
+    path: /healthz
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 3
+
+# ClusterIP service: exposes health/metrics within the cluster only
+service:
+  type: ClusterIP
+  port: 8080
+
+resources:
+  requests:
+    cpu: 50m
+    memory: 32Mi
+  limits:
+    cpu: 200m
+    memory: 64Mi
+
+env:
+  - name: HEALTH_ADDR
+    value: ":8080"
+
+# ------------------------------------------------------------
+# Future: eBPF privileges - DO NOT enable in bootstrap phase.
+# Uncomment when eBPF programs are introduced.
+# ------------------------------------------------------------
+#
+# securityContext:
+#   privileged: false
+#   capabilities:
+#     add:
+#       - BPF
+#       - PERFMON
+#       - SYS_PTRACE
+#     drop:
+#       - ALL
+#   readOnlyRootFilesystem: true
+#   allowPrivilegeEscalation: false
+#   runAsUser: 0
+#
+# hostPID: false  # set to true when process inspection is needed
+#
+# volumes:
+#   - name: sys
+#     hostPath:
+#       path: /sys
+#   - name: debugfs
+#     hostPath:
+#       path: /sys/kernel/debug
+#
+# volumeMounts:
+#   - name: sys
+#     mountPath: /sys
+#     readOnly: true
+#   - name: debugfs
+#     mountPath: /sys/kernel/debug
+#     readOnly: false
+#
+# tolerations:
+#   - operator: Exists
