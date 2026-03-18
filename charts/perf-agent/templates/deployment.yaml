@@ -1,12 +1,11 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: DaemonSet
 metadata:
   name: {{ include "perf-agent.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "perf-agent.labels" . | nindent 4 }}
 spec:
-  replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
       {{- include "perf-agent.selectorLabels" . | nindent 6 }}
@@ -16,6 +15,7 @@ spec:
         {{- include "perf-agent.labels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "perf-agent.serviceAccountName" . }}
+      hostPID: {{ .Values.hostPID }}
       containers:
         - name: perf-agent
           image: {{ include "perf-agent.image" . }}
@@ -32,3 +32,13 @@ spec:
             {{- toYaml .Values.readinessProbe | nindent 12 }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          volumeMounts:
+            {{- toYaml .Values.volumeMounts | nindent 12 }}
+      volumes:
+        {{- toYaml .Values.volumes | nindent 8 }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
